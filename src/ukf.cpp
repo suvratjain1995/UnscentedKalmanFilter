@@ -25,10 +25,10 @@ UKF::UKF() {
   P_ = MatrixXd(5, 5);
 
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 0.80;
+  std_a_ = 1.5;
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 0.75;
+  std_yawdd_ = 0.5;
   
   //DO NOT MODIFY measurement noise values below these are provided by the sensor manufacturer.
   // Laser measurement noise standard deviation position1 in m
@@ -89,14 +89,14 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   */
   if (is_initialized_ == false)
   {
-  if(meas_package.sensor_type_ == MeasurementPackage::RADAR && use_radar_ == true)
+  if(meas_package.sensor_type_ == MeasurementPackage::RADAR)
   {
     float radius = meas_package.raw_measurements_[0];
     float phi = meas_package.raw_measurements_[1];
-
+    float rho_dot = meas_package.raw_measurements_[2];
     float px = radius*cos(phi);
     float py = radius*sin(phi);
-    x_ << px,py,0.0,0.0,0.0;
+    x_ << px,py,rho_dot,0.0,0.0;
   } 
   else
   {
@@ -147,6 +147,7 @@ void UKF::GenerateAugmentedSigmaPoints(MatrixXd *Xsig_aug_out,double delta_t)
       
 
       MatrixXd Xsig_aug = MatrixXd(n_aug, 2 * n_aug + 1);
+      Xsig_aug.fill(0.0);
     x_aug.fill(0.0);
     x_aug.head(n_x)= x_;
     x_aug.tail(2).setZero();
@@ -394,20 +395,20 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   {
       float x_state = Xsig_pred_.col(i).row(0).value();
       float y_state = Xsig_pred_.col(i).row(1).value();
-      if(x_state > 0.0001 && y_state > 0.0001)
-      {
+      // if(x_state > 0.0001 && y_state > 0.0001)
+      // {
           Zsig.col(i) << x_state,
                           y_state;
 
-      }
-      else
-      {
-          float x_state = 0.0;
-          float y_state = 0.0;
-          Zsig.col(i) << x_state,
-                        y_state;
+      // }
+      // else
+      // {
+      //     float x_state = 0.0;
+      //     float y_state = 0.0;
+      //     Zsig.col(i) << x_state,
+      //                   y_state;
                         
-      }
+      // }
       
   }
   
